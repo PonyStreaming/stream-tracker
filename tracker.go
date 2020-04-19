@@ -6,6 +6,7 @@ import (
 	"github.com/go-redis/redis/v7"
 	"log"
 	"net/http"
+	"time"
 )
 
 type StreamTracker struct {
@@ -113,13 +114,22 @@ func (st *StreamTracker) handleStreamUpdates(w http.ResponseWriter, r *http.Requ
 	pubsub := st.redis.Subscribe("stream_activity")
 	defer pubsub.Close()
 
+	const pingTime = 45 * time.Second
+	pingChannel := time.After(pingTime)
 	for {
-		message := <-pubsub.Channel()
-		_, err := w.Write([]byte(fmt.Sprintf("data: %s\n\n", message.Payload)))
+		output := ""
+		select {
+		case message := <-pubsub.Channel():
+			output = fmt.Sprintf("data: %s\n\n", message.Payload)
+		case <-pingChannel:
+			pingChannel = time.After(pingTime)
+			output = ": ping\n\n"
+		}
+
+		_, err := w.Write([]byte(output))
 		if err == nil {
 			w.(http.Flusher).Flush()
-		}
-		if err != nil {
+		} else {
 			log.Printf("write failed, dropping connection: %v", err)
 			break
 		}
