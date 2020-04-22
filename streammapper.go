@@ -14,14 +14,20 @@ type StreamMapper struct {
 	configPath     string
 	mapping        map[string]string
 	reverseMapping map[string]string
-	outputs        map[string]string
+	outputs        []Output
 	mutex          sync.RWMutex
 	lastModified   time.Time
 }
 
 type StreamMappingConfig struct {
 	Mapping map[string]string `yaml:"mapping"`
-	Outputs map[string]string `yaml:"outputs"`
+	Outputs []Output          `yaml:"outputs"`
+}
+
+type Output struct {
+	Name     string `yaml:"name" json:"name"`
+	Key      string `yaml:"key" json:"key"`
+	Endpoint string `yaml:"endpoint" json:"endpoint"`
 }
 
 func NewStreamMapper(configPath string) (*StreamMapper, error) {
@@ -80,14 +86,10 @@ func (sm *StreamMapper) GetStreams() map[string]string {
 	return ret
 }
 
-func (sm *StreamMapper) GetOutputs() map[string]string {
+func (sm *StreamMapper) GetOutputs() []Output {
 	sm.mutex.RLock()
 	defer sm.mutex.RUnlock()
-	ret := map[string]string{}
-	for k, v := range sm.outputs {
-		ret[k] = v
-	}
-	return ret
+	return append([]Output{}, sm.outputs...)
 }
 
 func (sm *StreamMapper) parse() error {

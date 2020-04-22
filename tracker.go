@@ -111,7 +111,7 @@ func (st *StreamTracker) handleOutputs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out := struct {
-		Outputs map[string]string `json:"outputs"`
+		Outputs []Output `json:"outputs"`
 	}{st.mapper.GetOutputs()}
 	if err := json.NewEncoder(w).Encode(out); err != nil {
 		log.Printf("Couldn't encode outputs: %v??\n", err)
