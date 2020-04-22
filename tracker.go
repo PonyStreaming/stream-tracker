@@ -17,11 +17,12 @@ type StreamTracker struct {
 }
 
 func NewStreamTracker(mapper *StreamMapper, redis *redis.Client, password string) *StreamTracker {
-	st := new(StreamTracker)
-	st.password = password
-	st.mapper = mapper
-	st.redis = redis
-	st.mux = http.NewServeMux()
+	st := &StreamTracker{
+		password: password,
+		mapper:   mapper,
+		redis:    redis,
+		mux:      http.NewServeMux(),
+	}
 	st.mux.HandleFunc("/notify/publish", st.handlePublish)
 	st.mux.HandleFunc("/notify/publish_done", st.handlePublishDone)
 	st.mux.HandleFunc("/api/streams", st.handleStreams)
