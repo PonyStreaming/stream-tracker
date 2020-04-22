@@ -114,6 +114,9 @@ func (st *StreamTracker) handleStreamUpdates(w http.ResponseWriter, r *http.Requ
 	pubsub := st.redis.Subscribe("stream_activity")
 	defer pubsub.Close()
 
+	_, _ = w.Write([]byte(": hello\n\n"))
+	w.(http.Flusher).Flush()
+
 	const pingTime = 45 * time.Second
 	pingChannel := time.After(pingTime)
 	for {
