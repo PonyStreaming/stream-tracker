@@ -25,6 +25,7 @@ func NewStreamTracker(mapper *StreamMapper, redis *redis.Client, password string
 	st.mux.HandleFunc("/notify/publish", st.handlePublish)
 	st.mux.HandleFunc("/notify/publish_done", st.handlePublishDone)
 	st.mux.HandleFunc("/api/streams", st.handleStreams)
+	st.mux.HandleFunc("/api/outputs", st.handleOutputs)
 	st.mux.HandleFunc("/api/stream_updates", st.handleStreamUpdates)
 	return st
 }
@@ -90,11 +91,29 @@ func (st *StreamTracker) handleStreams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ls := liveStreams{Streams: map[string]stream{}}
-	for k, v := range st.mapper.mapping {
+	for k, v := range st.mapper.GetStreams() {
 		ls.Streams[k] = stream{Key: v, Live: active[v] == "1"}
 	}
 	if err := json.NewEncoder(w).Encode(ls); err != nil {
 		log.Printf("Couldn't encode active streams: %v??\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (st *StreamTracker) handleOutputs(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+
+	if st.password != "" && r.URL.Query().Get("password") != st.password {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	out := struct {
+		Outputs map[string]string `json:"outputs"`
+	}{st.mapper.GetOutputs()}
+	if err := json.NewEncoder(w).Encode(out); err != nil {
+		log.Printf("Couldn't encode outputs: %v??\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
