@@ -25,10 +25,11 @@ type StreamMappingConfig struct {
 }
 
 type Output struct {
-	Name       string `yaml:"name" json:"name"`
-	Key        string `yaml:"key" json:"key"`
-	Endpoint   string `yaml:"endpoint" json:"endpoint"`
-	TechStream string `yaml:"techStream" json:"techStream"`
+	Name         string `yaml:"name" json:"name"`
+	Key          string `yaml:"key" json:"key"`
+	Endpoint     string `yaml:"endpoint" json:"endpoint"`
+	TechStream   string `yaml:"techStream" json:"techStream"`
+	ZoomEndpoint string `yaml:"zoomEndpoint" json:"zoomEndpoint,omitempty"`
 }
 
 func NewStreamMapper(configPath string) (*StreamMapper, error) {
